@@ -1,0 +1,106 @@
+From ecab3841bb00321fb9fdee7e36da1bec81edc590 Mon Sep 17 00:00:00 2001
+From: Ziyang Huang <hzyitc@outlook.com>
+Date: Fri, 9 Jan 2026 23:16:09 +0800
+Subject: [PATCH] qualcommax: ipq50xx: pz-l8: enable wifi
+
+Signed-off-by: Ziyang Huang <hzyitc@outlook.com>
+---
+ package/firmware/ipq-wifi/Makefile                |  2 ++
+ target/linux/qualcommax/dts/ipq5018-pz-l8.dts     | 15 +++++++--------
+ target/linux/qualcommax/image/ipq50xx.mk          |  1 +
+ .../etc/hotplug.d/firmware/11-ath11k-caldata      |  4 ++++
+ 4 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/package/firmware/ipq-wifi/Makefile b/package/firmware/ipq-wifi/Makefile
+index 1cdaaf93cb5e11..5a448215272b1e 100644
+--- a/package/firmware/ipq-wifi/Makefile
++++ b/package/firmware/ipq-wifi/Makefile
+@@ -36,6 +36,7 @@ ALLWIFIBOARDS:= \
+ 	buffalo_wxr-5950ax12 \
+ 	cambiumnetworks_xe34 \
+ 	cmcc_mr3000d-ci \
++	cmcc_pz-l8 \
+ 	cmcc_rm2-6 \
+ 	compex_wpq873 \
+ 	dynalink_dl-wrx36 \
+@@ -228,6 +229,7 @@ $(eval $(call generate-ipq-wifi-package,asus_rt-ax89x,Asus RT-AX89X))
+ $(eval $(call generate-ipq-wifi-package,buffalo_wxr-5950ax12,Buffalo WXR-5950AX12))
+ $(eval $(call generate-ipq-wifi-package,cambiumnetworks_xe34,Cambium Networks XE3-4))
+ $(eval $(call generate-ipq-wifi-package,cmcc_mr3000d-ci,CMCC MR3000D-CI))
++$(eval $(call generate-ipq-wifi-package,cmcc_pz-l8,CMCC PZ-L8))
+ $(eval $(call generate-ipq-wifi-package,cmcc_rm2-6,CMCC RM2-6))
+ $(eval $(call generate-ipq-wifi-package,compex_wpq873,Compex WPQ-873))
+ $(eval $(call generate-ipq-wifi-package,dynalink_dl-wrx36,Dynalink DL-WRX36))
+diff --git a/target/linux/qualcommax/dts/ipq5018-pz-l8.dts b/target/linux/qualcommax/dts/ipq5018-pz-l8.dts
+index 5b4e3b5ba7ba8a..c58c3e2a2ca915 100644
+--- a/target/linux/qualcommax/dts/ipq5018-pz-l8.dts
++++ b/target/linux/qualcommax/dts/ipq5018-pz-l8.dts
+@@ -350,13 +350,12 @@
+ 	};
+ };
+ 
+-/*
+- * ath11k Wi-Fi consumes too large memory spaces and too few spaces are
+- * available for users. To prevent OOM when using LuCI or other softwares,
+- * disable Wi-Fi related peripherals at the moment.
+- */
+ &q6v5_wcss {
+-	status = "disabled";
++	boot-args = </*       type:	*/ 0x2 /* PCIE1	*/
++		     /*     length:	*/ 4
++		     /*     UPD ID:	*/ 2
++		     /* reset GPIO:	*/ 27
++		     /*   reserved:	*/ 0 0>;
+ };
+ 
+ &wifi {
+@@ -368,7 +367,7 @@
+ 
+ 	ieee80211-freq-limit = <2400000 2483000>;
+ 
+-	status = "disabled";
++	status = "okay";
+ };
+ 
+ &wifi1 {
+@@ -382,5 +381,5 @@
+ 
+ 	ieee80211-freq-limit = <5150000 5730000>;
+ 
+-	status = "disabled";
++	status = "okay";
+ };
+diff --git a/target/linux/qualcommax/image/ipq50xx.mk b/target/linux/qualcommax/image/ipq50xx.mk
+index a636fea0b3839b..d68c18a53a6f67 100644
+--- a/target/linux/qualcommax/image/ipq50xx.mk
++++ b/target/linux/qualcommax/image/ipq50xx.mk
+@@ -46,6 +46,7 @@ define Device/cmcc_pz-l8
+ 	PAGESIZE := 2048
+ 	IMAGE_SIZE := 59392k
+ 	NAND_SIZE := 128m
++	DEVICE_PACKAGES := kmod-ath11k-smallbuffers ath11k-firmware-ipq5018-qcn6122 ipq-wifi-cmcc_pz-l8
+ endef
+ TARGET_DEVICES += cmcc_pz-l8
+ 
+diff --git a/target/linux/qualcommax/ipq50xx/base-files/etc/hotplug.d/firmware/11-ath11k-caldata b/target/linux/qualcommax/ipq50xx/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+index 92fd10a04fb7f5..1c6e11668b98b4 100644
+--- a/target/linux/qualcommax/ipq50xx/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
++++ b/target/linux/qualcommax/ipq50xx/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+@@ -46,6 +46,7 @@ case "$FIRMWARE" in
+ 		ath11k_remove_regdomain
+ 		ath11k_set_macflag
+ 		;;
++	cmcc,pz-l8|\
+ 	xiaomi,ax6000)
+ 		caldata_extract "0:art" 0x1000 0x20000
+ 		;;
+@@ -102,6 +103,9 @@ case "$FIRMWARE" in
+ 		ath11k_remove_regdomain
+ 		ath11k_set_macflag
+ 		;;
++	cmcc,pz-l8)
++		caldata_extract "0:art" 0x1000 0x20000
++		;;
+ 	esac
+ 	;;
+ "ath11k/QCN6122/hw1.0/cal-ahb-b00b040.wifi.bin")
